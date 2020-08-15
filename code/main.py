@@ -146,7 +146,7 @@ for epoch in range(next_epoch, EPOCH):
         d_real_loss += real_loss.item()
         # b. train on fake images
         # generate fake images from samples
-        samples = torch.randn((BATCH_SIZE, Z_DIM))
+        samples = torch.randn((BATCH_SIZE, Z_DIM)).to(device)
         fake_inputs = net.module.generate(samples) if multigpu else net.generate(samples)
         fake_outputs = net.module.discriminate(fake_inputs) if multigpu else net.discriminate(fake_inputs)
         # the last batch might not have BATCH_SIZE number of data
@@ -164,7 +164,7 @@ for epoch in range(next_epoch, EPOCH):
 
         # 2. train the generator
         # generate samples
-        samples = torch.randn((BATCH_SIZE, Z_DIM))
+        samples = torch.randn((BATCH_SIZE, Z_DIM)).to(device)
         # zeroes generator gradients
         g_optimizer.zero_grad()
         # generate images
