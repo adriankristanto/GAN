@@ -86,7 +86,7 @@ MODEL_DIRPATH = os.path.dirname(os.path.realpath(__file__)) + '/../saved_models/
 GENERATED_DIRPATH = os.path.dirname(os.path.realpath(__file__)) + '/../generated_images/'
 CONTINUE_TRAIN = False
 CONTINUE_TRAIN_NAME = MODEL_DIRPATH + 'gan-model-epoch10.pth'
-EPOCH = 50
+EPOCH = 5
 SAVE_INTERVAL = 5
 # for generation
 SAMPLE = torch.randn((BATCH_SIZE, Z_DIM))
@@ -139,16 +139,18 @@ for epoch in range(next_epoch, EPOCH):
         # zeroes discriminator gradients
         d_optimizer.zero_grad()
         # a. train on real images
-        real_labels = torch.ones((BATCH_SIZE, 1))
         real_outputs = net.module.discriminate(inputs) if multigpu else net.discriminate(inputs)
+        # the last batch might not have BATCH_SIZE number of data
+        real_labels = torch.ones(real_outputs.shape[0], 1)
         real_loss = criterion(real_outputs, real_labels)
         d_real_loss += real_loss.item()
         # b. train on fake images
-        fake_labels = torch.zeros((BATCH_SIZE, 1))
         # generate fake images from samples
         samples = torch.randn((BATCH_SIZE, Z_DIM))
         fake_inputs = net.module.generate(samples) if multigpu else net.generate(samples)
         fake_outputs = net.module.discriminate(fake_inputs) if multigpu else net.discriminate(fake_inputs)
+        # the last batch might not have BATCH_SIZE number of data
+        fake_labels = torch.zeros((fake_outputs.shape[0], 1))
         fake_loss = criterion(fake_outputs, fake_labels)
         d_fake_loss += fake_loss.item()
         # compute total loss
@@ -160,7 +162,6 @@ for epoch in range(next_epoch, EPOCH):
         d_optimizer.step()
 
         # 2. train the generator
-        labels = torch.ones((BATCH_SIZE, 1))
         # generate samples
         samples = torch.randn((BATCH_SIZE, Z_DIM))
         # zeroes generator gradients
@@ -169,6 +170,8 @@ for epoch in range(next_epoch, EPOCH):
         outputs = net.module.generate(samples) if multigpu else net.generate(samples)
         # check how real the generated images are
         outputs = net.module.discriminate(outputs) if multigpu else net.discriminate(outputs)
+        # the last batch might not have BATCH_SIZE number of data
+        labels = torch.ones((outputs.shape[0], 1))
         # compute loss
         loss = criterion(outputs, labels)
         g_loss += loss.item()
