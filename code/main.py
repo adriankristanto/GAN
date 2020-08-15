@@ -19,11 +19,20 @@ DATA_PATH = os.path.dirname(os.path.realpath(__file__)) + '/../data/'
 BATCH_SIZE = 128
 
 train_transform = transforms.Compose([
-    transforms.ToTensor()
+    transforms.ToTensor(),
+    # each pixel of each image from the MNIST dataset is within the range [0, 1]
+    # normalizing with mean=0.5 and std=0.5
+    # 0 <= x <= 1
+    # -0.5 <= x - 0.5 <= 0.5
+    # -1 <= (x - 0.5) / 0.5 <= 1
+    # thus, changing its range to [-1, 1]
+    # this is because the generator uses tanh on the output layer, which has the range [-1, 1]
+    transforms.Normalize((0.5,), (0.5,))
 ])
 
 test_transform = transforms.Compose([
-    transforms.ToTensor()
+    transforms.ToTensor(),
+    transforms.Normalize((0.5,), (0.5,))
 ])
 
 trainset = datasets.MNIST(root=DATA_PATH, train=True, transform=train_transform, download=True)
