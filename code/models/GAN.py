@@ -41,6 +41,7 @@ class Discriminator(nn.Module):
             # append internal activation if this is not the last layer, otherwise, append the 
             # output activation
             layers.append(internal_activation if i < len(layers_dim) - 1 else output_activation)
+        return nn.Sequential(*layers)
 
     def forward(self, x):
         x = self.layers(x)
@@ -67,3 +68,17 @@ class GAN(nn.Module):
         x = self.generate(x)
         x = self.discriminate(x)
         return x
+
+    
+if __name__ == "__main__":
+    net = GAN(
+        # the latent space dimension is 100
+        g_dims=[100, 256, 400, 784],
+        g_in_activation=nn.LeakyReLU(),
+        g_out_activation=nn.Tanh(),
+        # the final layer for the discriminator is just a neuron that returns [0, 1]
+        d_dims=[784, 400, 256, 1],
+        d_in_activation=nn.LeakyReLU(),
+        d_out_activation=nn.Sigmoid()
+    )
+    print(net)
