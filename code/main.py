@@ -71,7 +71,7 @@ net.to(device)
 # the generator is trained by combining it with the discriminator
 # however, we don't change the discriminator's weights
 # therefore, the output that will be used by the loss function is also in the range [0, 1]
-criterion = nn.BCELoss()
+criterion = nn.BCELoss(reduction='sum')
 
 # 4. define the optimiser
 # a. the optimiser for the generator
@@ -86,7 +86,7 @@ MODEL_DIRPATH = os.path.dirname(os.path.realpath(__file__)) + '/../saved_models/
 GENERATED_DIRPATH = os.path.dirname(os.path.realpath(__file__)) + '/../generated_images/'
 CONTINUE_TRAIN = False
 CONTINUE_TRAIN_NAME = MODEL_DIRPATH + 'gan-model-epoch10.pth'
-EPOCH = 5
+EPOCH = 50
 SAVE_INTERVAL = 5
 # for generation
 SAMPLE = torch.randn((BATCH_SIZE, Z_DIM))
@@ -154,8 +154,9 @@ for epoch in range(next_epoch, EPOCH):
         fake_loss = criterion(fake_outputs, fake_labels)
         d_fake_loss += fake_loss.item()
         # compute total loss
-        total_loss = (real_loss + fake_loss) / 2
+        total_loss = (real_loss + fake_loss)
         d_loss += total_loss.item()
+        d_n += len(inputs)
         # compute gradients
         total_loss.backward()
         # update discriminator weights
@@ -175,6 +176,7 @@ for epoch in range(next_epoch, EPOCH):
         # compute loss
         loss = criterion(outputs, labels)
         g_loss += loss.item()
+        g_n += len(inputs)
         loss.backward()
         # update generator weights
         g_optimizer.step()
@@ -185,10 +187,10 @@ for epoch in range(next_epoch, EPOCH):
         save_training_progress(net, g_optimizer, d_optimizer, epoch, MODEL_DIRPATH + f"gan-model-epoch{epoch + 1}.pth")
     
     print(f"""
-    Discriminator loss on real images: {d_real_loss}
-    Discriminator loss on fake images: {d_fake_loss}
-    Discriminator loss: {d_loss}
-    Generator loss: {g_loss}
+    Discriminator loss on real images: {d_real_loss/d_n}
+    Discriminator loss on fake images: {d_fake_loss/d_n}
+    Discriminator loss: {d_loss/d_n}
+    Generator loss: {g_loss/g_n}
     """)
 
 save_training_progress(net, g_optimizer, d_optimizer, epoch, MODEL_DIRPATH + f"gan-model-epoch{EPOCH}.pth")
