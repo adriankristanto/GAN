@@ -41,3 +41,25 @@ class Discriminator(nn.Module):
     def forward(self, x):
         x = self.layers(x)
         return x
+
+
+class GAN(nn.Module):
+
+    def __init__(self, generator_dims, generator_activation, discriminator_dims, discriminator_activation, output_activation):
+        super(GAN, self).__init__()
+        self.generator = Generator(generator_dims, generator_activation)
+        self.discriminator = Discriminator(discriminator_dims, discriminator_activation, output_activation)
+
+    def generate(self, x):
+        x = self.generator(x)
+        return x
+
+    def discriminate(self, x):
+        x = self.discriminator(x)
+        return x
+
+    def forward(self, x):
+        # combined model
+        x = self.generate(x)
+        x = self.discriminate(x)
+        return x
