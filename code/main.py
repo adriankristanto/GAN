@@ -71,3 +71,11 @@ net.to(device)
 # however, we don't change the discriminator's weights
 # therefore, the output that will be used by the loss function is also in the range [0, 1]
 criterion = nn.BCELoss()
+
+# 4. define the optimiser
+# a. the optimiser for the generator
+g_lr = 0.0002
+g_optimizer = optim.Adam(net.generator.parameters(), lr=g_lr)
+# b. the optimiser for the discriminator
+d_lr = 0.0004
+d_optimizer = optim.Adam(net.discriminator.parameters(), lr=d_lr)
