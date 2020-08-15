@@ -40,15 +40,15 @@ Total data: {len(trainset) + len(testset)}
 
 # 2. instantiate the network model
 Z_DIM = 100
-
+# reference: https://machinelearningmastery.com/how-to-train-stable-generative-adversarial-networks/
 net = GAN(
     # the latent space dimension is 100
     g_dims=[Z_DIM, 256, 400, 784],
-    g_in_activation=nn.LeakyReLU(),
+    g_in_activation=nn.ReLU(),
     g_out_activation=nn.Tanh(),
     # the final layer for the discriminator is just a neuron that returns [0, 1]
     d_dims=[784, 400, 256, 1],
-    d_in_activation=nn.LeakyReLU(),
+    d_in_activation=nn.LeakyReLU(0.2),
     d_out_activation=nn.Sigmoid()
 )
 
@@ -76,10 +76,10 @@ criterion = nn.BCELoss(reduction='sum')
 # 4. define the optimiser
 # a. the optimiser for the generator
 g_lr = 0.0002
-g_optimizer = optim.Adam(net.generator.parameters(), lr=g_lr)
+g_optimizer = optim.Adam(net.generator.parameters(), lr=g_lr, betas=(0.5, 0.999))
 # b. the optimiser for the discriminator
-d_lr = 0.0004
-d_optimizer = optim.Adam(net.discriminator.parameters(), lr=d_lr)
+d_lr = 0.0002
+d_optimizer = optim.Adam(net.discriminator.parameters(), lr=d_lr, betas=(0.5, 0.999))
 
 # 5. train the model
 MODEL_DIRPATH = os.path.dirname(os.path.realpath(__file__)) + '/../saved_models/'
