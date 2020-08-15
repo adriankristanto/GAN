@@ -119,3 +119,73 @@ def save_training_progress(net, g_optimizer, d_optimizer, epoch, target_dir):
     }, target_dir)
 
 generate(SAMPLE, GENERATED_DIRPATH + 'gan_sample_0.png')
+
+# actual training script
+for epoch in range(next_epoch, EPOCH):
+    # for loss calculation
+    d_real_loss = 0.0
+    d_fake_loss = 0.0
+    d_loss = 0.0
+    g_loss = 0.0
+    d_n = 0
+    g_n = 0
+
+    net.train()
+    for train_data in tqdm(trainloader, desc=f"Epoch {epoch + 1}/{EPOCH}"):
+        inputs = train_data[0].to(device)
+        inputs = inputs.view(-1, FLATTEN_SIZE)
+
+        # 1. train the discriminator
+        # zeroes discriminator gradients
+        d_optimizer.zero_grad()
+        # a. train on real images
+        real_labels = torch.ones((BATCH_SIZE, 1))
+        real_outputs = net.module.discriminate(inputs) if multigpu else net.discriminate(inputs)
+        real_loss = criterion(real_outputs, real_labels)
+        d_real_loss += real_loss.item()
+        # b. train on fake images
+        fake_labels = torch.zeros((BATCH_SIZE, 1))
+        # generate fake images from samples
+        samples = torch.randn((BATCH_SIZE, Z_DIM))
+        fake_inputs = net.module.generate(samples) if multigpu else net.generate(samples)
+        fake_outputs = net.module.discriminate(fake_inputs) if multigpu else net.discriminate(fake_inputs)
+        fake_loss = criterion(fake_outputs, fake_labels)
+        d_fake_loss += fake_loss.item()
+        # compute total loss
+        total_loss = (real_loss + fake_loss) / 2
+        d_loss += total_loss.item()
+        # compute gradients
+        total_loss.backward()
+        # update discriminator weights
+        d_optimizer.step()
+
+        # 2. train the generator
+        labels = torch.ones((BATCH_SIZE, 1))
+        # generate samples
+        samples = torch.randn((BATCH_SIZE, Z_DIM))
+        # zeroes generator gradients
+        g_optimizer.zero_grad()
+        # generate images
+        outputs = net.module.generate(samples) if multigpu else net.generate(samples)
+        # check how real the generated images are
+        outputs = net.module.discriminate(outputs) if multigpu else net.discriminate(outputs)
+        # compute loss
+        loss = criterion(outputs, labels)
+        g_loss += loss.item()
+        loss.backward()
+        # update generator weights
+        g_optimizer.step()
+    
+    generate(SAMPLE, GENERATED_DIRPATH + f'gan_sample_{epoch + 1}.png')
+
+    if (epoch + 1) % SAVE_INTERVAL == 0:
+        save_training_progress(net, g_optimizer, d_optimizer, epoch, MODEL_DIRPATH + f"gan-model-epoch{epoch + 1}.pth")
+    
+    print(f"""
+    Discriminator loss on real images: {d_real_loss}
+    Discriminator loss on fake images: {d_fake_loss}
+    Discriminator loss: {d_loss}
+    Generator loss: {g_loss}
+    """)
+
+save_training_progress(net, g_optimizer, d_optimizer, epoch, MODEL_DIRPATH + f"gan-model-epoch{EPOCH}.pth")
