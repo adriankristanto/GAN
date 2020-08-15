@@ -82,3 +82,6 @@ if __name__ == "__main__":
         d_out_activation=nn.Sigmoid()
     )
     print(net)
+    sample = torch.randn((1, 100))
+    print(net.generate(sample).shape)
+    print(net.discriminate(net.generate(sample)).shape)
