@@ -141,16 +141,16 @@ for epoch in range(next_epoch, EPOCH):
         # a. train on real images
         real_outputs = net.module.discriminate(inputs) if multigpu else net.discriminate(inputs)
         # the last batch might not have BATCH_SIZE number of data
-        real_labels = torch.ones(real_outputs.shape[0], 1).to(device)
+        real_labels = torch.ones(inputs.shape[0], 1).to(device)
         real_loss = criterion(real_outputs, real_labels)
         d_real_loss += real_loss.item()
         # b. train on fake images
         # generate fake images from samples
-        samples = torch.randn((BATCH_SIZE, Z_DIM)).to(device)
+        samples = torch.randn((inputs.shape[0], Z_DIM)).to(device)
         fake_inputs = net.module.generate(samples) if multigpu else net.generate(samples)
         fake_outputs = net.module.discriminate(fake_inputs) if multigpu else net.discriminate(fake_inputs)
         # the last batch might not have BATCH_SIZE number of data
-        fake_labels = torch.zeros((fake_outputs.shape[0], 1)).to(device)
+        fake_labels = torch.zeros((inputs.shape[0], 1)).to(device)
         fake_loss = criterion(fake_outputs, fake_labels)
         d_fake_loss += fake_loss.item()
         # compute total loss
@@ -164,7 +164,7 @@ for epoch in range(next_epoch, EPOCH):
 
         # 2. train the generator
         # generate samples
-        samples = torch.randn((BATCH_SIZE, Z_DIM)).to(device)
+        samples = torch.randn((inputs.shape[0], Z_DIM)).to(device)
         # zeroes generator gradients
         g_optimizer.zero_grad()
         # generate images
@@ -172,7 +172,7 @@ for epoch in range(next_epoch, EPOCH):
         # check how real the generated images are
         outputs = net.module.discriminate(outputs) if multigpu else net.discriminate(outputs)
         # the last batch might not have BATCH_SIZE number of data
-        labels = torch.ones((outputs.shape[0], 1)).to(device)
+        labels = torch.ones((inputs.shape[0], 1)).to(device)
         # compute loss
         loss = criterion(outputs, labels)
         g_loss += loss.item()
