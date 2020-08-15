@@ -82,5 +82,6 @@ if __name__ == "__main__":
     )
     print(net)
     sample = torch.randn((1, 100))
-    print(net.generate(sample).shape)
-    print(net.discriminate(net.generate(sample)).shape)
+    # print(net.generate(sample).shape)
+    # print(net.discriminate(net.generate(sample)).shape)
+    print(net.state_dict())

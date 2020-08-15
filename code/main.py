@@ -9,6 +9,7 @@ from tqdm import tqdm
 import os 
 from models.GAN import GAN
 from datetime import datetime
+import numpy as np
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 print(f'Current device: {device}', flush=True)
@@ -79,3 +80,42 @@ g_optimizer = optim.Adam(net.generator.parameters(), lr=g_lr)
 # b. the optimiser for the discriminator
 d_lr = 0.0004
 d_optimizer = optim.Adam(net.discriminator.parameters(), lr=d_lr)
+
+# 5. train the model
+MODEL_DIRPATH = os.path.dirname(os.path.realpath(__file__)) + '/../saved_models/'
+GENERATED_DIRPATH = os.path.dirname(os.path.realpath(__file__)) + '/../generated_images/'
+CONTINUE_TRAIN = False
+CONTINUE_TRAIN_NAME = MODEL_DIRPATH + 'gan-model-epoch10.pth'
+EPOCH = 50
+SAVE_INTERVAL = 5
+# for generation
+SAMPLE = torch.randn((BATCH_SIZE, Z_DIM))
+
+IMAGE_SIZE = (1, 28, 28)
+FLATTEN_SIZE = np.prod(IMAGE_SIZE)
+
+next_epoch = 0
+if CONTINUE_TRAIN:
+    checkpoint = torch.load(CONTINUE_TRAIN_NAME)
+    net.load_state_dict(checkpoint.get('net_state_dict'))
+    g_optimizer.load_state_dict(checkpoint.get('g_optimizer_state_dict'))
+    d_optimizer.load_state_dict(checkpoint.get('d_optimizer_state_dict'))
+    next_epoch = checkpoint.get('epoch')
+
+def generate(sample, filename):
+    net.eval()
+    with torch.no_grad():
+        sample = sample.to(device)
+        sample = net.module.generate(sample) if multigpu else net.generate(sample)
+        sample = sample.view(BATCH_SIZE, *IMAGE_SIZE)
+        torchvision.utils.save_image(sample, filename)
+
+def save_training_progress(net, g_optimizer, d_optimizer, epoch, target_dir):
+    torch.save({
+        'epoch' : epoch + 1,
+        'net_state_dict' : net.state_dict(),
+        'g_optimizer_state_dict' : g_optimizer.state_dict(),
+        'd_optimizer_state_dict' : d_optimizer.state_dict()
+    }, target_dir)
+
+generate(SAMPLE, GENERATED_DIRPATH + 'gan_sample_0.png')
