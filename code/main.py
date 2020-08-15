@@ -62,3 +62,12 @@ if torch.cuda.device_count() > 1:
     multigpu = True
 
 net.to(device)
+
+# 3. define the loss function
+# the discriminator will output a value in the range of [0, 1]
+# where 0 means the input is fake, while 1 means the input is real
+# therefore, we can use binary cross entropy loss
+# the generator is trained by combining it with the discriminator
+# however, we don't change the discriminator's weights
+# therefore, the output that will be used by the loss function is also in the range [0, 1]
+criterion = nn.BCELoss()
