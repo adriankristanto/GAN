@@ -200,6 +200,6 @@ for epoch in range(next_epoch, EPOCH):
     Discriminator loss on fake images: {d_fake_loss/d_n}
     Discriminator loss: {d_loss/d_n}
     Generator loss: {g_loss/g_n}
-    """)
+    """, flush=True)
 
 save_training_progress(net, g_optimizer, d_optimizer, epoch, MODEL_DIRPATH + f"gan-model-epoch{EPOCH}.pth")
