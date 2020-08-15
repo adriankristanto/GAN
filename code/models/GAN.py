@@ -49,10 +49,10 @@ class Discriminator(nn.Module):
 
 class GAN(nn.Module):
 
-    def __init__(self, generator_dims, generator_activation, discriminator_dims, discriminator_activation, output_activation):
+    def __init__(self, g_dims, g_in_activation, g_out_activation, d_dims, d_in_activation, d_out_activation):
         super(GAN, self).__init__()
-        self.generator = Generator(generator_dims, generator_activation)
-        self.discriminator = Discriminator(discriminator_dims, discriminator_activation, output_activation)
+        self.generator = Generator(g_dims, g_in_activation, g_out_activation)
+        self.discriminator = Discriminator(d_dims, d_in_activation, d_out_activation)
 
     def generate(self, x):
         x = self.generator(x)
