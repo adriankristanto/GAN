@@ -18,7 +18,9 @@ class Generator(nn.Module):
                 out_channels=channels[i],
                 kernel_size=kernels[i],
                 stride=strides[i],
-                padding=paddings[i]
+                padding=paddings[i],
+                # https://discuss.pytorch.org/t/why-does-not-generative-adversarial-networks-use-bias-in-convolutional-layers/1944/4
+                bias=False
             )
             layers.append(layer)
             # add batchnorm layer if batch_norm == True and this is not the final layer
@@ -55,7 +57,8 @@ class Discriminator(nn.Module):
             if batch_norm and i < len(channels) - 1:
                 layers.append(nn.BatchNorm2d(channels[i]))
             # add activation function
-            layers.append(internal_activation if i < len(channels) else output_activation)
+            layers.append(internal_activation if i < len(channels) - 1 else output_activation)
+        return nn.Sequential(*layers)
     
     def forward(self, x):
         x = self.layers(x)
@@ -63,6 +66,7 @@ class Discriminator(nn.Module):
 
 
 if __name__ == "__main__":
+    # Generator G
     Z_DIM = 100
     G = Generator(
         channels=[Z_DIM, 256, 128, 64, 1],
@@ -76,3 +80,16 @@ if __name__ == "__main__":
     print(G)
     sample = torch.randn((1, Z_DIM, 1, 1))
     print(G(sample).shape)
+
+    # Discriminator D
+    D = Discriminator(
+        channels=[1, 64, 128, 256, 1],
+        kernels=[None, 4, 4, 5, 7],
+        strides=[None, 2, 2, 1, 1],
+        paddings=[None, 1, 1, 2, 0],
+        batch_norm=True,
+        internal_activation=nn.LeakyReLU(0.2),
+        output_activation=nn.Sigmoid()
+    )
+    print(D)
+    print(D(G(sample)).shape)
