@@ -67,3 +67,21 @@ D = Discriminator(
     internal_activation=nn.LeakyReLU(0.2),
     output_activation=nn.Sigmoid()
 )
+
+print(f"""
+Generator G:
+{G}
+
+Discriminator D:
+{D}
+""", flush=True)
+
+multigpu = False
+if torch.cuda.device_count() > 1:
+    print(f'Number of GPUs: {torch.cuda.device_count()}\n', flush=True)
+    G = nn.DataParallel(G)
+    D = nn.DataParallel(D)
+    multigpu = True
+
+G.to(device)
+D.to(device)
