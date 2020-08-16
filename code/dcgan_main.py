@@ -102,7 +102,7 @@ GENERATED_DIRPATH = os.path.dirname(os.path.realpath(__file__)) + '/../generated
 CONTINUE_TRAIN = False
 CONTINUE_TRAIN_NAME = MODEL_DIRPATH + 'gan-model-epoch10.pth'
 EPOCH = 600
-SAVE_INTERVAL = 50
+SAVE_INTERVAL = 20
 # for generation
 SAMPLE_SIZE = 64
 # the generator accepts input (100, 1, 1)
