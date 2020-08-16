@@ -61,6 +61,8 @@ net = GAN(
     d_out_activation=nn.Sigmoid()
 )
 
+print(f'{net}', flush=True)
+
 # if we train with multiple GPUs, we need to use 
 # net.module.generate()
 # with only one GPU, we can simply use
