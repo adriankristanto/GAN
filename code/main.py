@@ -97,7 +97,7 @@ MODEL_DIRPATH = os.path.dirname(os.path.realpath(__file__)) + '/../saved_models/
 GENERATED_DIRPATH = os.path.dirname(os.path.realpath(__file__)) + '/../generated_images/'
 CONTINUE_TRAIN = False
 CONTINUE_TRAIN_NAME = MODEL_DIRPATH + 'gan-model-epoch10.pth'
-EPOCH = 50
+EPOCH = 600
 SAVE_INTERVAL = 100
 # for generation
 SAMPLE_SIZE = 64
