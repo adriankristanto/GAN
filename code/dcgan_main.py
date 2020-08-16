@@ -45,3 +45,25 @@ Total testing data: {len(testset)}
 Total data: {len(trainset) + len(testset)}
 """, flush=True)
 
+# 2. instantiate the model
+Z_DIM = 100
+# create the generator G
+G = Generator(
+    channels=[Z_DIM, 256, 128, 64, 1],
+    kernels=[None, 7, 5, 4, 4],
+    strides=[None, 1, 1, 2, 2],
+    paddings=[None, 0, 2, 1, 1],
+    batch_norm=True,
+    internal_activation=nn.ReLU(),
+    output_activation=nn.Tanh()
+)
+# create the discrimintor D
+D = Discriminator(
+    channels=[1, 64, 128, 256, 1],
+    kernels=[None, 4, 4, 5, 7],
+    strides=[None, 2, 2, 1, 1],
+    paddings=[None, 1, 1, 2, 0],
+    batch_norm=True,
+    internal_activation=nn.LeakyReLU(0.2),
+    output_activation=nn.Sigmoid()
+)
