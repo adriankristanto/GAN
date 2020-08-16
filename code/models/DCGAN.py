@@ -6,6 +6,7 @@ class Generator(nn.Module):
     def __init__(self, channels, kernels, strides, paddings, batch_norm, internal_activation, output_activation):
         super(Generator, self).__init__()
         self.layers = self._build(channels, kernels, strides, paddings, batch_norm, internal_activation, output_activation)
+        self._init_weights()
 
     def _build(self, channels, kernels, strides, paddings, batch_norm, internal_activation, output_activation):
         # the first input is obtained from the latent space z
@@ -31,6 +32,15 @@ class Generator(nn.Module):
             layers.append(internal_activation if i < len(channels) - 1 else output_activation)
         return nn.Sequential(*layers)
     
+    # All weights were initialized from a zero-centered Normal distribution with standard deviation 0.02
+    def _init_weights(self):
+        for module in self.modules():
+            if isinstance(module, nn.ConvTranspose2d):
+                nn.init.normal_(module.weight, mean=0.0, std=0.02)
+            elif isinstance(module, nn.BatchNorm2d):
+                nn.init.normal_(module.weight, mean=0.0, std=0.02)
+                nn.init.constant_(module.bias, 0)
+    
     def forward(self, x):
         x = self.layers(x)
         return x
@@ -40,6 +50,7 @@ class Discriminator(nn.Module):
     def __init__(self, channels, kernels, strides, paddings, batch_norm, internal_activation, output_activation):
         super(Discriminator, self).__init__()
         self.layers = self._build(channels, kernels, strides, paddings, batch_norm, internal_activation, output_activation)
+        self._init_weights()
     
     def _build(self, channels, kernels, strides, paddings, batch_norm, internal_activation, output_activation):
         layers = []
@@ -50,7 +61,9 @@ class Discriminator(nn.Module):
                 out_channels=channels[i],
                 kernel_size=kernels[i],
                 stride=strides[i],
-                padding=paddings[i]
+                padding=paddings[i],
+                # https://discuss.pytorch.org/t/why-does-not-generative-adversarial-networks-use-bias-in-convolutional-layers/1944/4
+                bias=False
             )
             layers.append(layer)
             # add batch norm layer
@@ -59,6 +72,15 @@ class Discriminator(nn.Module):
             # add activation function
             layers.append(internal_activation if i < len(channels) - 1 else output_activation)
         return nn.Sequential(*layers)
+    
+    # All weights were initialized from a zero-centered Normal distribution with standard deviation 0.02
+    def _init_weights(self):
+        for module in self.modules():
+            if isinstance(module, nn.Conv2d):
+                nn.init.normal_(module.weight, mean=0.0, std=0.02)
+            elif isinstance(module, nn.BatchNorm2d):
+                nn.init.normal_(module.weight, mean=0.0, std=0.02)
+                nn.init.constant_(module.bias, 0)
     
     def forward(self, x):
         x = self.layers(x)
