@@ -95,10 +95,11 @@ MODEL_DIRPATH = os.path.dirname(os.path.realpath(__file__)) + '/../saved_models/
 GENERATED_DIRPATH = os.path.dirname(os.path.realpath(__file__)) + '/../generated_images/'
 CONTINUE_TRAIN = False
 CONTINUE_TRAIN_NAME = MODEL_DIRPATH + 'gan-model-epoch10.pth'
-EPOCH = 600
+EPOCH = 50
 SAVE_INTERVAL = 100
 # for generation
-SAMPLE = torch.randn((BATCH_SIZE, Z_DIM))
+SAMPLE_SIZE = 64
+SAMPLE = torch.randn((SAMPLE_SIZE, Z_DIM))
 
 IMAGE_SIZE = (1, 28, 28)
 FLATTEN_SIZE = np.prod(IMAGE_SIZE)
@@ -116,7 +117,7 @@ def generate(sample, filename):
     with torch.no_grad():
         sample = sample.to(device)
         sample = net.module.generate(sample) if multigpu else net.generate(sample)
-        sample = sample.view(BATCH_SIZE, *IMAGE_SIZE)
+        sample = sample.view(SAMPLE_SIZE, *IMAGE_SIZE)
         torchvision.utils.save_image(sample, filename)
 
 def save_training_progress(net, g_optimizer, d_optimizer, epoch, target_dir):
@@ -145,8 +146,9 @@ for epoch in range(next_epoch, EPOCH):
         inputs = inputs.view(-1, FLATTEN_SIZE)
 
         # 1. train the discriminator
-        # zeroes discriminator gradients
+        # zeroes gradients
         d_optimizer.zero_grad()
+        g_optimizer.zero_grad()
         # a. train on real images
         real_outputs = net.module.discriminate(inputs) if multigpu else net.discriminate(inputs)
         # the last batch might not have BATCH_SIZE number of data
@@ -157,7 +159,7 @@ for epoch in range(next_epoch, EPOCH):
         # generate fake images from samples
         samples = torch.randn((inputs.shape[0], Z_DIM)).to(device)
         fake_inputs = net.module.generate(samples) if multigpu else net.generate(samples)
-        fake_outputs = net.module.discriminate(fake_inputs) if multigpu else net.discriminate(fake_inputs)
+        fake_outputs = net.module.discriminate(fake_inputs.detach()) if multigpu else net.discriminate(fake_inputs)
         # the last batch might not have BATCH_SIZE number of data
         fake_labels = torch.zeros((inputs.shape[0], 1)).to(device)
         fake_loss = criterion(fake_outputs, fake_labels)
@@ -172,14 +174,13 @@ for epoch in range(next_epoch, EPOCH):
         d_optimizer.step()
 
         # 2. train the generator
+        # zeroes gradients
+        g_optimizer.zero_grad()
+        d_optimizer.zero_grad()
         # generate samples
         samples = torch.randn((inputs.shape[0], Z_DIM)).to(device)
-        # zeroes generator gradients
-        g_optimizer.zero_grad()
-        # generate images
-        outputs = net.module.generate(samples) if multigpu else net.generate(samples)
-        # check how real the generated images are
-        outputs = net.module.discriminate(outputs) if multigpu else net.discriminate(outputs)
+        # generate images based on the samples and discriminate them
+        outputs = net(samples)
         # the last batch might not have BATCH_SIZE number of data
         labels = torch.ones((inputs.shape[0], 1)).to(device)
         # compute loss

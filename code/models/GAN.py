@@ -72,11 +72,11 @@ class GAN(nn.Module):
 if __name__ == "__main__":
     net = GAN(
         # the latent space dimension is 100
-        g_dims=[100, 256, 400, 784],
+        g_dims=[100, 256, 256, 784],
         g_in_activation=nn.LeakyReLU(),
         g_out_activation=nn.Tanh(),
         # the final layer for the discriminator is just a neuron that returns [0, 1]
-        d_dims=[784, 400, 256, 1],
+        d_dims=[784, 256, 256, 1],
         d_in_activation=nn.LeakyReLU(),
         d_out_activation=nn.Sigmoid()
     )
@@ -84,4 +84,4 @@ if __name__ == "__main__":
     sample = torch.randn((1, 100))
     # print(net.generate(sample).shape)
     # print(net.discriminate(net.generate(sample)).shape)
-    print(net.state_dict())
+    # print(net.state_dict())
