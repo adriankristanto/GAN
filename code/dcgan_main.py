@@ -48,7 +48,7 @@ Total data: {len(trainset) + len(testset)}
 # 2. instantiate the model
 Z_DIM = 100
 # create the generator G
-G = Generator(
+G = DCGAN.Generator(
     channels=[Z_DIM, 256, 128, 64, 1],
     kernels=[None, 7, 5, 4, 4],
     strides=[None, 1, 1, 2, 2],
@@ -58,7 +58,7 @@ G = Generator(
     output_activation=nn.Tanh()
 )
 # create the discrimintor D
-D = Discriminator(
+D = DCGAN.Discriminator(
     channels=[1, 64, 128, 256, 1],
     kernels=[None, 4, 4, 5, 7],
     strides=[None, 2, 2, 1, 1],
@@ -96,3 +96,43 @@ g_optimizer = optim.Adam(G.parameters(), lr=g_lr, betas=(0.5, 0.999))
 # b. the optimiser for the discriminator
 d_lr = 0.0002
 d_optimizer = optim.Adam(D.parameters(), lr=d_lr, betas=(0.5, 0.999))
+
+# 5. train the model
+MODEL_DIRPATH = os.path.dirname(os.path.realpath(__file__)) + '/../saved_models/'
+GENERATED_DIRPATH = os.path.dirname(os.path.realpath(__file__)) + '/../generated_images/'
+CONTINUE_TRAIN = False
+CONTINUE_TRAIN_NAME = MODEL_DIRPATH + 'gan-model-epoch10.pth'
+EPOCH = 600
+SAVE_INTERVAL = 50
+# for generation
+SAMPLE_SIZE = 64
+# the generator accepts input (100, 1, 1)
+SAMPLE = torch.randn((SAMPLE_SIZE, Z_DIM, 1, 1))
+
+IMAGE_SIZE = (1, 28, 28)
+FLATTEN_SIZE = np.prod(IMAGE_SIZE)
+
+next_epoch = 0
+if CONTINUE_TRAIN:
+    checkpoint = torch.load(CONTINUE_TRAIN_NAME)
+    net.load_state_dict(checkpoint.get('net_state_dict'))
+    g_optimizer.load_state_dict(checkpoint.get('g_optimizer_state_dict'))
+    d_optimizer.load_state_dict(checkpoint.get('d_optimizer_state_dict'))
+    next_epoch = checkpoint.get('epoch')
+
+def generate(sample, filename):
+    G.eval()
+    with torch.no_grad():
+        sample = sample.to(device)
+        sample = G(sample)
+        torchvision.utils.save_image(sample, filename, pad_value=1)
+
+def save_training_progress(net, g_optimizer, d_optimizer, epoch, target_dir):
+    torch.save({
+        'epoch' : epoch + 1,
+        'net_state_dict' : net.state_dict(),
+        'g_optimizer_state_dict' : g_optimizer.state_dict(),
+        'd_optimizer_state_dict' : d_optimizer.state_dict()
+    }, target_dir)
+
+generate(SAMPLE, GENERATED_DIRPATH + 'dcgan_sample_0.png')
