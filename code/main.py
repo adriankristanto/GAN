@@ -52,11 +52,11 @@ Z_DIM = 100
 # reference: https://machinelearningmastery.com/how-to-train-stable-generative-adversarial-networks/
 net = GAN(
     # the latent space dimension is Z_DIM
-    g_dims=[Z_DIM, 256, 256, 784],
+    g_dims=[Z_DIM, 128, 256, 512, 1024, 784],
     g_in_activation=nn.ReLU(),
     g_out_activation=nn.Tanh(),
     # the final layer for the discriminator is just a neuron that returns [0, 1]
-    d_dims=[784, 256, 256, 1],
+    d_dims=[784, 512, 256, 1],
     d_in_activation=nn.LeakyReLU(0.2),
     d_out_activation=nn.Sigmoid()
 )
