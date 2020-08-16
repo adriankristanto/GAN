@@ -52,11 +52,11 @@ Z_DIM = 100
 # reference: https://machinelearningmastery.com/how-to-train-stable-generative-adversarial-networks/
 net = GAN(
     # the latent space dimension is Z_DIM
-    g_dims=[Z_DIM, 128, 256, 512, 1024, 784],
+    g_dims=[Z_DIM, 256, 256, 784],
     g_in_activation=nn.ReLU(),
     g_out_activation=nn.Tanh(),
     # the final layer for the discriminator is just a neuron that returns [0, 1]
-    d_dims=[784, 512, 256, 1],
+    d_dims=[784, 256, 256, 1],
     d_in_activation=nn.LeakyReLU(0.2),
     d_out_activation=nn.Sigmoid()
 )
@@ -161,7 +161,7 @@ for epoch in range(next_epoch, EPOCH):
         # generate fake images from samples
         samples = torch.randn((inputs.shape[0], Z_DIM)).to(device)
         fake_inputs = net.module.generate(samples) if multigpu else net.generate(samples)
-        fake_outputs = net.module.discriminate(fake_inputs.detach()) if multigpu else net.discriminate(fake_inputs)
+        fake_outputs = net.module.discriminate(fake_inputs.detach()) if multigpu else net.discriminate(fake_inputs.detach())
         # the last batch might not have BATCH_SIZE number of data
         fake_labels = torch.zeros((inputs.shape[0], 1)).to(device)
         fake_loss = criterion(fake_outputs, fake_labels)
