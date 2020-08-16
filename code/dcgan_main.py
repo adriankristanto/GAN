@@ -85,3 +85,6 @@ if torch.cuda.device_count() > 1:
 
 G.to(device)
 D.to(device)
+
+# 3. define the loss function
+criterion = nn.BCELoss(reduction='sum')
