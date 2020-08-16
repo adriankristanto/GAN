@@ -7,7 +7,6 @@ import torchvision.transforms as transforms
 from tqdm import tqdm
 import os
 import models.DCGAN as DCGAN
-import numpy as np
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 print(f'Current device: {device}', flush=True)
@@ -110,7 +109,6 @@ SAMPLE_SIZE = 64
 SAMPLE = torch.randn((SAMPLE_SIZE, Z_DIM, 1, 1))
 
 IMAGE_SIZE = (1, 28, 28)
-FLATTEN_SIZE = np.prod(IMAGE_SIZE)
 
 next_epoch = 0
 if CONTINUE_TRAIN:
@@ -127,12 +125,80 @@ def generate(sample, filename):
         sample = G(sample)
         torchvision.utils.save_image(sample, filename, pad_value=1)
 
-def save_training_progress(net, g_optimizer, d_optimizer, epoch, target_dir):
+def save_training_progress(G, D, g_optimizer, d_optimizer, epoch, target_dir):
     torch.save({
         'epoch' : epoch + 1,
-        'net_state_dict' : net.state_dict(),
+        'G_state_dict' : G.state_dict(),
+        'D_state_dict' : D.state_dict(),
         'g_optimizer_state_dict' : g_optimizer.state_dict(),
         'd_optimizer_state_dict' : d_optimizer.state_dict()
     }, target_dir)
 
 generate(SAMPLE, GENERATED_DIRPATH + 'dcgan_sample_0.png')
+
+for epoch in range(next_epoch, EPOCH):
+    d_real_loss = 0.0
+    d_fake_loss = 0.0
+    d_loss = 0.0
+    g_loss = 0.0
+    n = 0
+
+    D.train()
+    G.train()
+    for train_data in tqdm(trainloader, desc=f"Epoch {epoch + 1}/{EPOCH}"):
+        inputs = train_data[0].to(device)
+
+        # 1. train the discriminator
+        # zeroes gradients
+        d_optimizer.zero_grad()
+        g_optimizer.zero_grad()
+        # a. train on real images
+        real_outputs = D(inputs)
+        real_labels = torch.ones(inputs.shape[0], 1).to(device)
+        real_loss = criterion(real_outputs, real_labels)
+        d_real_loss += real_loss.item()
+        # b. train on fake images
+        samples = torch.randn((inputs.shape[0], Z_DIM, 1, 1)).to(device)
+        fake_outputs = D(G(samples).detach())
+        fake_labels = torch.zeros((inputs.shape[0], 1)).to(device)
+        fake_loss = criterion(fake_outputs, fake_labels)
+        d_fake_loss += fake_loss.item()
+        # compute total loss
+        total_loss = (real_loss + fake_loss)
+        d_loss += total_loss.item()
+        # compute gradients
+        total_loss.backward()
+        # update discriminator weights
+        d_optimizer.step()
+
+        # 2. train the generator
+        g_optimizer.zero_grad()
+        d_optimizer.zero_grad()
+        # generate samples
+        samples = torch.randn((inputs.shape[0], Z_DIM, 1, 1)).to(device)
+        # generate images based on the samples and discriminate them
+        outputs = D(G(samples))
+        labels = torch.ones((inputs.shape[0], 1)).to(device)
+        # compute loss
+        loss = criterion(outputs, labels)
+        g_loss += loss.item()
+        # compute gradients
+        loss.backward()
+        # update generator weights
+        g_optimizer.step()
+
+        n += len(inputs)
+
+    generate(SAMPLE, GENERATED_DIRPATH + f'dcgan_sample_{epoch + 1}.png')
+
+    if (epoch + 1) % SAVE_INTERVAL == 0:
+        save_training_progress(G, D, g_optimizer, d_optimizer, epoch, MODEL_DIRPATH + f'dcgan-model-epoch{epoch + 1}.pth')
+
+    print(f"""
+    Discriminator loss on real images: {d_real_loss/n}
+    Discriminator loss on fake images: {d_fake_loss/n}
+    Discriminator loss: {d_loss/n}
+    Generator loss: {g_loss/n}
+    """, flush=True)
+
+save_training_progress(G, D, g_optimizer, d_optimizer, epoch, MODEL_DIRPATH + f'dcgan-model-epoch{epoch + 1}.pth')
