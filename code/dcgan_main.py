@@ -154,13 +154,13 @@ for epoch in range(next_epoch, EPOCH):
         g_optimizer.zero_grad()
         # a. train on real images
         real_outputs = D(inputs)
-        real_labels = torch.ones(inputs.shape[0], 1).to(device)
+        real_labels = torch.ones(inputs.shape[0], 1, 1, 1).to(device)
         real_loss = criterion(real_outputs, real_labels)
         d_real_loss += real_loss.item()
         # b. train on fake images
         samples = torch.randn((inputs.shape[0], Z_DIM, 1, 1)).to(device)
         fake_outputs = D(G(samples).detach())
-        fake_labels = torch.zeros((inputs.shape[0], 1)).to(device)
+        fake_labels = torch.zeros((inputs.shape[0], 1, 1, 1)).to(device)
         fake_loss = criterion(fake_outputs, fake_labels)
         d_fake_loss += fake_loss.item()
         # compute total loss
@@ -178,7 +178,7 @@ for epoch in range(next_epoch, EPOCH):
         samples = torch.randn((inputs.shape[0], Z_DIM, 1, 1)).to(device)
         # generate images based on the samples and discriminate them
         outputs = D(G(samples))
-        labels = torch.ones((inputs.shape[0], 1)).to(device)
+        labels = torch.ones((inputs.shape[0], 1, 1, 1)).to(device)
         # compute loss
         loss = criterion(outputs, labels)
         g_loss += loss.item()
