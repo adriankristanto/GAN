@@ -215,7 +215,7 @@ for epoch in range(next_epoch, EPOCH):
         real_outputs = D(inputs)
         real_labels = torch.ones(inputs.shape[0], 1, 1, 1).to(device)
         # similar to -1 * reduction_func(real_outputs)
-        real_loss = WassersteinLoss(real_outputs, real_labels, reduction='sum')
+        real_loss = WassersteinLoss(real_outputs, real_labels, reduction='mean')
         d_real_wloss += real_loss.item()
 
         samples = torch.randn((inputs.shape[0], Z_DIM, 1, 1)).to(device)
@@ -224,11 +224,11 @@ for epoch in range(next_epoch, EPOCH):
         fake_outputs = D(fake_inputs.detach())
         fake_labels = -1 * torch.ones((inputs.shape[0], 1, 1, 1)).to(device)
         # similar to reduction_func(fake_outputs)
-        fake_loss = WassersteinLoss(fake_outputs, fake_labels, reduction='sum')
+        fake_loss = WassersteinLoss(fake_outputs, fake_labels, reduction='mean')
         d_fake_wloss += fake_loss.item()
 
         # compute total loss
-        total_loss = real_loss + fake_loss + LAMBDA * GradientPenaltyLoss(D, inputs, fake_inputs, reduction='sum')
+        total_loss = real_loss + fake_loss + LAMBDA * GradientPenaltyLoss(D, inputs, fake_inputs, reduction='mean')
         d_loss += total_loss.item()
 
         # compute gradients
@@ -246,7 +246,7 @@ for epoch in range(next_epoch, EPOCH):
             outputs = D(G(samples))
             labels = torch.ones((inputs.shape[0], 1, 1, 1)).to(device)
             # compute loss
-            loss = WassersteinLoss(outputs, labels, reduction='sum')
+            loss = WassersteinLoss(outputs, labels, reduction='mean')
             g_loss += loss.item()
             # compute gradients
             loss.backward()
