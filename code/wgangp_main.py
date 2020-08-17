@@ -81,3 +81,51 @@ if torch.cuda.device_count() > 1:
 
 G.to(device)
 D.to(device)
+
+# 3. define the loss function
+def WassersteinLoss(prediction, truth, reduction='mean'):
+    reduction_func = None
+    if reduction == 'mean':
+        reduction = torch.mean
+    elif reduction == 'sum':
+        reduction = torch.sum
+    # since we are minimising the loss function, we multiply it with -1
+    return -1 * reduction_func(prediction * truth)
+
+def GradientPenaltyLoss(D, real_samples, fake_samples, reduction='mean'):
+    # generate a random number epsilon from uniform distribution [0,1]
+    # as the weight for each sample
+    # there are real_samples.shape[0] samples in the batch
+    epsilon = torch.rand((real_samples.shape[0], 1, 1, 1)).to(device)
+    # interpolates real and fake samples
+    inputs = (epsilon * real_samples + (1 - epsilon) * fake_samples).requires_grad_(True)
+    inputs = inputs.to(device)
+    # fed the interpolated samples to the critic
+    outputs = D(inputs)
+    # compute the gradients of the outputs w.r.t the inputs
+    gradients = torch.autograd.grad(
+        outputs=outputs,
+        inputs=inputs,
+        # reference: https://stackoverflow.com/questions/58059268/pytorch-autograd-grad-how-to-write-the-parameters-for-multiple-outputs
+        # reference: https://stackoverflow.com/questions/54166206/grad-outputs-in-torch-autograd-grad-crossentropyloss
+        # reference: https://discuss.pytorch.org/t/what-does-grad-outputs-do-in-autograd-grad/18014
+        grad_outputs=torch.ones_like(outputs).to(device),
+        create_graph=True,
+        retain_graph=True
+    )[0]
+    # to easily compute the norm, flatten the gradients of shape (batch_size, channels, heights, widths)
+    # for example, torch.Size([1, 1, 28, 28])
+    gradients = gradients.view(real_samples.shape[0], -1)
+    # calculate the gradients norm
+    # and compute the distance between the gradients norm and 1
+    # the aim is to satisfy the Lipschitz constraint
+    gradient_penalty = (gradients.norm(2, dim=1) - 1) ** 2
+
+    reduction_func = None
+    if reduction == 'mean':
+        reduction_func = torch.mean
+    elif reduction == 'sum':
+        reduction_func = torch.sum
+    
+    return reduction_func(gradient_penalty)
+
