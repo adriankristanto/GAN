@@ -43,3 +43,41 @@ Total training data: {len(trainset)}
 Total testing data: {len(testset)}
 Total data: {len(trainset) + len(testset)}
 """, flush=True)
+
+# 2. instantiate the model
+# Generator G
+Z_DIM = 100
+G = WGANGP.Generator(
+    channels=[Z_DIM, 256, 128, 64, 1],
+    kernels=[None, 7, 5, 4, 4],
+    strides=[None, 1, 1, 2, 2],
+    paddings=[None, 0, 2, 1, 1],
+    batch_norm=True,
+    internal_activation=nn.ReLU(),
+    output_activation=nn.Tanh()
+)
+# Critic D
+D = WGANGP.Critic(
+    channels=[1, 64, 128, 256, 1],
+    kernels=[None, 4, 4, 5, 7],
+    strides=[None, 2, 2, 1, 1],
+    paddings=[None, 1, 1, 2, 0],
+    internal_activation=nn.LeakyReLU(0.2),
+)
+print(f"""
+Generator G:
+{G}
+
+Critic D:
+{D}
+""", flush=True)
+
+multigpu = False
+if torch.cuda.device_count() > 1:
+    print(f'Number of GPUs: {torch.cuda.device_count()}\n', flush=True)
+    G = nn.DataParallel(G)
+    D = nn.DataParallel(D)
+    multigpu = True
+
+G.to(device)
+D.to(device)
