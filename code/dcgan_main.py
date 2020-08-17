@@ -113,7 +113,8 @@ IMAGE_SIZE = (1, 28, 28)
 next_epoch = 0
 if CONTINUE_TRAIN:
     checkpoint = torch.load(CONTINUE_TRAIN_NAME)
-    net.load_state_dict(checkpoint.get('net_state_dict'))
+    G.load_state_dict(checkpoint.get('G_state_dict'))
+    D.load_state_dict(checkpoint.get('D_state_dict'))
     g_optimizer.load_state_dict(checkpoint.get('g_optimizer_state_dict'))
     d_optimizer.load_state_dict(checkpoint.get('d_optimizer_state_dict'))
     next_epoch = checkpoint.get('epoch')
