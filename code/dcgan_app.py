@@ -37,3 +37,11 @@ if 'module.' in list(old_G_state_dict.keys())[0]:
     G.load_state_dict(new_G_state_dict)
 else:
     G.load_state_dict(old_G_state_dict)
+
+# generate new image
+sample = torch.randn((1, Z_DIM))
+print(f'Sample: {sample}\n')
+sample = sample.view((-1, Z_DIM, 1, 1))
+sample = G(sample)
+filename = datetime.now().strftime('%d_%m_%Y_%H%M%S')
+torchvision.utils.save_image(sample, f'{filename}.png')
