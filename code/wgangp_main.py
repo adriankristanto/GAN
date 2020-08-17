@@ -182,7 +182,7 @@ def save_training_progress(G, D, g_optimizer, d_optimizer, epoch, target_dir):
         'd_optimizer_state_dict' : d_optimizer.state_dict()
     }, target_dir)
 
-generate(SAMPLE, GENERATED_DIRPATH + 'dcgan_sample_0.png')
+generate(SAMPLE, GENERATED_DIRPATH + 'wgangp_sample_0.png')
 
 for epoch in range(next_epoch, EPOCH):
     d_real_wloss = 0.0
