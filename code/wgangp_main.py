@@ -86,9 +86,9 @@ D.to(device)
 def WassersteinLoss(prediction, truth, reduction='mean'):
     reduction_func = None
     if reduction == 'mean':
-        reduction = torch.mean
+        reduction_func = torch.mean
     elif reduction == 'sum':
-        reduction = torch.sum
+        reduction_func = torch.sum
     # since we are minimising the loss function, we multiply it with -1
     return -1 * reduction_func(prediction * truth)
 
@@ -149,6 +149,12 @@ SAMPLE_SIZE = 64
 # the generator accepts input (100, 1, 1)
 SAMPLE = torch.randn((SAMPLE_SIZE, Z_DIM, 1, 1))
 
+# WGAN-GP global variables
+# the recommended ratio used is 5 critic updates to 1 generator update
+CRITIC_ITER = 5
+# the following is the penalty coefficient
+LAMBDA = 10
+
 IMAGE_SIZE = (1, 28, 28)
 
 next_epoch = 0
@@ -177,3 +183,88 @@ def save_training_progress(G, D, g_optimizer, d_optimizer, epoch, target_dir):
     }, target_dir)
 
 generate(SAMPLE, GENERATED_DIRPATH + 'dcgan_sample_0.png')
+
+for epoch in range(next_epoch, EPOCH):
+    d_real_wloss = 0.0
+    d_fake_wloss = 0.0
+    d_loss = 0.0
+    g_loss = 0.0
+    d_n = 0
+    g_n = 0
+
+    D.train()
+    G.train()
+
+    # to count how many times the gradient updates have been performed
+    # whenever counter % CRITIC_ITER == 0, we update the generator
+    # for example, CRITIC_ITER = 5, then
+    # counter = 0, update both G & D
+    # counter = 1 until 4, update D
+    # counter = 5, update both G & D, and so on
+    counter = 0
+    for train_data in tqdm(trainloader):
+        inputs = train_data[0].to(device)
+        d_n += len(inputs)
+
+        # 1. train the discriminator
+        # zeroes gradients
+        d_optimizer.zero_grad()
+        g_optimizer.zero_grad()
+
+        # a. train on real images
+        real_outputs = D(inputs)
+        real_labels = torch.ones(inputs.shape[0], 1, 1, 1).to(device)
+        # similar to -1 * reduction_func(real_outputs)
+        real_loss = WassersteinLoss(real_outputs, real_labels, reduction='sum')
+        d_real_wloss += real_loss
+
+        samples = torch.randn((inputs.shape[0], 1, 1, 1)).to(device)
+        fake_inputs = G(samples)
+        # b. train on fake images
+        fake_outputs = D(fake_inputs.detach())
+        fake_labels = -1 * torch.ones((inputs.shape[0], 1, 1, 1)).to(device)
+        # similar to reduction_func(fake_outputs)
+        fake_loss = WassersteinLoss(fake_outputs, fake_labels, reduction='sum')
+        d_fake_wloss += fake_loss
+
+        # compute total loss
+        total_loss = real_loss + fake_loss + LAMBDA * GradientPenaltyLoss(D, inputs, fake_inputs, reduction='sum')
+        d_loss += total_loss
+
+        # compute gradients
+        total_loss.backward()
+        # update parameters
+        d_optimizer.step()
+
+        if counter % CRITIC_ITER == 0:
+            g_n += len(inputs)
+            # 2. train the generator
+            g_optimizer.zero_grad()
+            d_optimizer.zero_grad()
+            
+            samples = torch.randn((inputs.shape[0], 1, 1, 1)).to(device)
+            outputs = D(G(samples))
+            labels = torch.ones((inputs.shape[0], 1, 1, 1)).to(device)
+            # compute loss
+            loss = WassersteinLoss(outputs, labels, reduction='sum')
+            g_loss += loss
+            # compute gradients
+            loss.backward()
+            # update generator weights
+            g_optimizer.step()
+        
+        counter += 1
+    
+    generate(SAMPLE, GENERATED_DIRPATH + f'wgangp_sample_{epoch + 1}.png')
+
+    if (epoch + 1) % SAVE_INTERVAL == 0:
+        save_training_progress(G, D, g_optimizer, d_optimizer, epoch, MODEL_DIRPATH + f'dcgan-model-epoch{epoch + 1}.pth')
+
+    print(f"""
+    Discriminator loss on real images: {d_real_loss/d_n}
+    Discriminator loss on fake images: {d_fake_loss/d_n}
+    Discriminator loss: {d_loss/d_n}
+    Generator loss: {g_loss/g_n}
+    """, flush=True)
+
+save_training_progress(G, D, g_optimizer, d_optimizer, epoch, MODEL_DIRPATH + f'dcgan-model-epoch{epoch + 1}.pth')
