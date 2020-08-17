@@ -202,7 +202,7 @@ for epoch in range(next_epoch, EPOCH):
     # counter = 1 until 4, update D
     # counter = 5, update both G & D, and so on
     counter = 0
-    for train_data in tqdm(trainloader):
+    for train_data in tqdm(trainloader, desc=f"Epoch {epoch + 1}/{EPOCH}"):
         inputs = train_data[0].to(device)
         d_n += len(inputs)
 
