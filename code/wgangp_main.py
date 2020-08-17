@@ -129,3 +129,10 @@ def GradientPenaltyLoss(D, real_samples, fake_samples, reduction='mean'):
     
     return reduction_func(gradient_penalty)
 
+# 4. define the optimisers
+# a. the optimiser for the generator
+g_lr = 0.0002
+g_optimizer = optim.Adam(G.parameters(), lr=g_lr, betas=(0.5, 0.999))
+# b. the optimiser for the critic
+d_lr = 0.0002
+d_optimizer = optim.Adam(D.parameters(), lr=d_lr, betas=(0.5, 0.999))
