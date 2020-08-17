@@ -26,7 +26,8 @@ G = DCGAN.Generator(
 # loading a model that was wrapped by nn.DataParallel for training
 checkpoint = torch.load(MODEL_PATH + MODEL_NAME, map_location=device)
 old_G_state_dict = checkpoint.get('G_state_dict')
-if 'module.' in old_G_state_dict.keys()[0]:
+# if the model was wrapped by nn.DataParallel
+if 'module.' in list(old_G_state_dict.keys())[0]:
     new_G_state_dict = OrderedDict()
     for key, value in old_G_state_dict.items():
         # remove "module." from each key
