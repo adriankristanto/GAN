@@ -10,7 +10,7 @@ device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
 # load the model
 MODEL_PATH = os.path.dirname(os.path.realpath(__file__)) + '/../saved_models/'
-MODEL_NAME = 'dcgan-model-epoch350.pth'
+MODEL_NAME = 'dcgan-model-epoch300.pth'
 Z_DIM = 100
 # we only need the generator to generate new images
 G = DCGAN.Generator(
