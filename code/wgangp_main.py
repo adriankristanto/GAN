@@ -261,8 +261,8 @@ for epoch in range(next_epoch, EPOCH):
         save_training_progress(G, D, g_optimizer, d_optimizer, epoch, MODEL_DIRPATH + f'dcgan-model-epoch{epoch + 1}.pth')
 
     print(f"""
-    Discriminator loss on real images: {d_real_loss/d_n}
-    Discriminator loss on fake images: {d_fake_loss/d_n}
+    Discriminator loss on real images: {d_real_wloss/d_n}
+    Discriminator loss on fake images: {d_fake_wloss/d_n}
     Discriminator loss: {d_loss/d_n}
     Generator loss: {g_loss/g_n}
     """, flush=True)
