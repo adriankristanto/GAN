@@ -218,7 +218,7 @@ for epoch in range(next_epoch, EPOCH):
         real_loss = WassersteinLoss(real_outputs, real_labels, reduction='sum')
         d_real_wloss += real_loss
 
-        samples = torch.randn((inputs.shape[0], 1, 1, 1)).to(device)
+        samples = torch.randn((inputs.shape[0], Z_DIM, 1, 1)).to(device)
         fake_inputs = G(samples)
         # b. train on fake images
         fake_outputs = D(fake_inputs.detach())
@@ -242,7 +242,7 @@ for epoch in range(next_epoch, EPOCH):
             g_optimizer.zero_grad()
             d_optimizer.zero_grad()
             
-            samples = torch.randn((inputs.shape[0], 1, 1, 1)).to(device)
+            samples = torch.randn((inputs.shape[0], Z_DIM, 1, 1)).to(device)
             outputs = D(G(samples))
             labels = torch.ones((inputs.shape[0], 1, 1, 1)).to(device)
             # compute loss
