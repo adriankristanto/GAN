@@ -7,7 +7,7 @@ import torchvision.datasets as datasets
 import torchvision.transforms as transforms
 from tqdm import tqdm
 import os 
-from models.GAN import GAN
+import models.GAN as GAN
 from datetime import datetime
 import numpy as np
 
@@ -50,18 +50,22 @@ Total data: {len(trainset) + len(testset)}
 # 2. instantiate the network model
 Z_DIM = 100
 # reference: https://machinelearningmastery.com/how-to-train-stable-generative-adversarial-networks/
-net = GAN(
-    # the latent space dimension is Z_DIM
-    g_dims=[Z_DIM, 256, 256, 784],
-    g_in_activation=nn.ReLU(),
-    g_out_activation=nn.Tanh(),
-    # the final layer for the discriminator is just a neuron that returns [0, 1]
-    d_dims=[784, 256, 256, 1],
-    d_in_activation=nn.LeakyReLU(0.2),
-    d_out_activation=nn.Sigmoid()
+G = Generator(
+    layers_dim=[Z_DIM, 256, 256, 784],
+    internal_activation=nn.ReLU(),
+    output_activation=nn.Tanh()
 )
-
-print(f'{net}', flush=True)
+D = Discriminator(
+    layers_dim=[784, 256, 256, 1],
+    internal_activation=nn.LeakyReLU(0.2),
+    output_activation=nn.Sigmoid()
+)
+print(f"""
+Generator G:
+{G}
+Discriminator D:
+{D}
+""", flush=True)
 
 # if we train with multiple GPUs, we need to use 
 # net.module.generate()
