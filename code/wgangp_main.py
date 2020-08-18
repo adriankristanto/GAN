@@ -258,7 +258,7 @@ for epoch in range(next_epoch, EPOCH):
     generate(SAMPLE, GENERATED_DIRPATH + f'wgangp_sample_{epoch + 1}.png')
 
     if (epoch + 1) % SAVE_INTERVAL == 0:
-        save_training_progress(G, D, g_optimizer, d_optimizer, epoch, MODEL_DIRPATH + f'dcgan-model-epoch{epoch + 1}.pth')
+        save_training_progress(G, D, g_optimizer, d_optimizer, epoch, MODEL_DIRPATH + f'wgangp-model-epoch{epoch + 1}.pth')
 
     print(f"""
     Discriminator loss on real images: {d_real_wloss/d_n}
@@ -267,4 +267,4 @@ for epoch in range(next_epoch, EPOCH):
     Generator loss: {g_loss/g_n}
     """, flush=True)
 
-save_training_progress(G, D, g_optimizer, d_optimizer, epoch, MODEL_DIRPATH + f'dcgan-model-epoch{epoch + 1}.pth')
+save_training_progress(G, D, g_optimizer, d_optimizer, epoch, MODEL_DIRPATH + f'wgangp-model-epoch{epoch + 1}.pth')
