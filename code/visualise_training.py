@@ -7,10 +7,10 @@ import re
 GENERATED_DIRPATH = os.path.dirname(os.path.realpath(__file__)) + '/../generated_images/'
 FPS = 10
 FOURCC = cv2.VideoWriter_fourcc(*'mp4v')
-VIDEO_FILENAME = 'dcgan_training.mp4'
+VIDEO_FILENAME = 'wgangp_training.mp4'
 
 
-filenames = sorted([GENERATED_DIRPATH + filename for filename in os.listdir(GENERATED_DIRPATH) if 'dcgan_sample_' in filename], key=lambda x: int(re.search(r'dcgan\_sample\_(\d+)\.png', x)[1]))
+filenames = sorted([GENERATED_DIRPATH + filename for filename in os.listdir(GENERATED_DIRPATH) if 'wgangp_sample_' in filename], key=lambda x: int(re.search(r'wgangp\_sample\_(\d+)\.png', x)[1]))
 img_array = []
 size = None
 
