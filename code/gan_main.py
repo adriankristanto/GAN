@@ -94,10 +94,10 @@ criterion = nn.BCELoss(reduction='sum')
 # 4. define the optimiser
 # a. the optimiser for the generator
 g_lr = 0.0002
-g_optimizer = optim.Adam(net.generator.parameters(), lr=g_lr, betas=(0.5, 0.999))
+g_optimizer = optim.Adam(G.parameters(), lr=g_lr, betas=(0.5, 0.999))
 # b. the optimiser for the discriminator
 d_lr = 0.0002
-d_optimizer = optim.Adam(net.discriminator.parameters(), lr=d_lr, betas=(0.5, 0.999))
+d_optimizer = optim.Adam(D.parameters(), lr=d_lr, betas=(0.5, 0.999))
 
 # 5. train the model
 MODEL_DIRPATH = os.path.dirname(os.path.realpath(__file__)) + '/../saved_models/'
