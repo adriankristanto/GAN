@@ -100,7 +100,7 @@ d_optimizer = optim.Adam(D.parameters(), lr=d_lr, betas=(0.5, 0.999))
 MODEL_DIRPATH = os.path.dirname(os.path.realpath(__file__)) + '/../saved_models/'
 GENERATED_DIRPATH = os.path.dirname(os.path.realpath(__file__)) + '/../generated_images/'
 CONTINUE_TRAIN = False
-CONTINUE_TRAIN_NAME = MODEL_DIRPATH + 'gan-model-epoch10.pth'
+CONTINUE_TRAIN_NAME = MODEL_DIRPATH + 'dcgan-model-epoch10.pth'
 EPOCH = 400
 SAVE_INTERVAL = 20
 # for generation
