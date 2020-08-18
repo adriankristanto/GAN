@@ -46,42 +46,24 @@ class Discriminator(nn.Module):
         x = self.layers(x)
         return x
 
-
-class GAN(nn.Module):
-
-    def __init__(self, g_dims, g_in_activation, g_out_activation, d_dims, d_in_activation, d_out_activation):
-        super(GAN, self).__init__()
-        self.generator = Generator(g_dims, g_in_activation, g_out_activation)
-        self.discriminator = Discriminator(d_dims, d_in_activation, d_out_activation)
-
-    def generate(self, x):
-        x = self.generator(x)
-        return x
-
-    def discriminate(self, x):
-        x = self.discriminator(x)
-        return x
-
-    def forward(self, x):
-        # combined model
-        x = self.generate(x)
-        x = self.discriminate(x)
-        return x
-
     
 if __name__ == "__main__":
-    net = GAN(
-        # the latent space dimension is 100
-        g_dims=[100, 256, 256, 784],
-        g_in_activation=nn.LeakyReLU(),
-        g_out_activation=nn.Tanh(),
-        # the final layer for the discriminator is just a neuron that returns [0, 1]
-        d_dims=[784, 256, 256, 1],
-        d_in_activation=nn.LeakyReLU(),
-        d_out_activation=nn.Sigmoid()
+    G = Generator(
+        layers_dim=[100, 256, 256, 784],
+        internal_activation=nn.ReLU(),
+        output_activation=nn.Tanh()
     )
-    print(net)
+    D = Discriminator(
+        layers_dim=[784, 256, 256, 1],
+        internal_activation=nn.LeakyReLU(0.2),
+        output_activation=nn.Sigmoid()
+    )
+    print(f"""
+    Generator G: 
+    {G}
+    Discriminator D:
+    {D}
+    """)
     sample = torch.randn((1, 100))
-    # print(net.generate(sample).shape)
-    # print(net.discriminate(net.generate(sample)).shape)
-    # print(net.state_dict())
+    print(G(sample).shape)
+    print(D(G(sample)).shape)
