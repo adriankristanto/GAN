@@ -104,8 +104,8 @@ MODEL_DIRPATH = os.path.dirname(os.path.realpath(__file__)) + '/../saved_models/
 GENERATED_DIRPATH = os.path.dirname(os.path.realpath(__file__)) + '/../generated_images/'
 CONTINUE_TRAIN = False
 CONTINUE_TRAIN_NAME = MODEL_DIRPATH + 'gan-model-epoch10.pth'
-EPOCH = 600
-SAVE_INTERVAL = 100
+EPOCH = 400
+SAVE_INTERVAL = 50
 # for generation
 SAMPLE_SIZE = 64
 SAMPLE = torch.randn((SAMPLE_SIZE, Z_DIM))
@@ -116,23 +116,25 @@ FLATTEN_SIZE = np.prod(IMAGE_SIZE)
 next_epoch = 0
 if CONTINUE_TRAIN:
     checkpoint = torch.load(CONTINUE_TRAIN_NAME)
-    net.load_state_dict(checkpoint.get('net_state_dict'))
+    G.load_state_dict(checkpoint.get('G_state_dict'))
+    D.load_state_dict(checkpoint.get('D_state_dict'))
     g_optimizer.load_state_dict(checkpoint.get('g_optimizer_state_dict'))
     d_optimizer.load_state_dict(checkpoint.get('d_optimizer_state_dict'))
     next_epoch = checkpoint.get('epoch')
 
 def generate(sample, filename):
-    net.eval()
+    G.eval()
     with torch.no_grad():
         sample = sample.to(device)
-        sample = net.module.generate(sample) if multigpu else net.generate(sample)
+        sample = G(sample)
         sample = sample.view(SAMPLE_SIZE, *IMAGE_SIZE)
         torchvision.utils.save_image(sample, filename)
 
-def save_training_progress(net, g_optimizer, d_optimizer, epoch, target_dir):
+def save_training_progress(G, D, g_optimizer, d_optimizer, epoch, target_dir):
     torch.save({
         'epoch' : epoch + 1,
-        'net_state_dict' : net.state_dict(),
+        'G_state_dict' : G.state_dict(),
+        'D_state_dict' : D.state_dict(),
         'g_optimizer_state_dict' : g_optimizer.state_dict(),
         'd_optimizer_state_dict' : d_optimizer.state_dict()
     }, target_dir)
@@ -146,10 +148,10 @@ for epoch in range(next_epoch, EPOCH):
     d_fake_loss = 0.0
     d_loss = 0.0
     g_loss = 0.0
-    d_n = 0
-    g_n = 0
+    n = 0
 
-    net.train()
+    D.train()
+    G.train()
     for train_data in tqdm(trainloader, desc=f"Epoch {epoch + 1}/{EPOCH}"):
         inputs = train_data[0].to(device)
         inputs = inputs.view(-1, FLATTEN_SIZE)
@@ -159,7 +161,7 @@ for epoch in range(next_epoch, EPOCH):
         d_optimizer.zero_grad()
         g_optimizer.zero_grad()
         # a. train on real images
-        real_outputs = net.module.discriminate(inputs) if multigpu else net.discriminate(inputs)
+        real_outputs = D(inputs)
         # the last batch might not have BATCH_SIZE number of data
         real_labels = torch.ones(inputs.shape[0], 1).to(device)
         real_loss = criterion(real_outputs, real_labels)
@@ -167,8 +169,7 @@ for epoch in range(next_epoch, EPOCH):
         # b. train on fake images
         # generate fake images from samples
         samples = torch.randn((inputs.shape[0], Z_DIM)).to(device)
-        fake_inputs = net.module.generate(samples) if multigpu else net.generate(samples)
-        fake_outputs = net.module.discriminate(fake_inputs.detach()) if multigpu else net.discriminate(fake_inputs.detach())
+        fake_outputs = D(G(samples).detach())
         # the last batch might not have BATCH_SIZE number of data
         fake_labels = torch.zeros((inputs.shape[0], 1)).to(device)
         fake_loss = criterion(fake_outputs, fake_labels)
@@ -176,7 +177,7 @@ for epoch in range(next_epoch, EPOCH):
         # compute total loss
         total_loss = (real_loss + fake_loss)
         d_loss += total_loss.item()
-        d_n += len(inputs)
+        n += len(inputs)
         # compute gradients
         total_loss.backward()
         # update discriminator weights
@@ -189,13 +190,12 @@ for epoch in range(next_epoch, EPOCH):
         # generate samples
         samples = torch.randn((inputs.shape[0], Z_DIM)).to(device)
         # generate images based on the samples and discriminate them
-        outputs = net(samples)
+        outputs = D(G(samples))
         # the last batch might not have BATCH_SIZE number of data
         labels = torch.ones((inputs.shape[0], 1)).to(device)
         # compute loss
         loss = criterion(outputs, labels)
         g_loss += loss.item()
-        g_n += len(inputs)
         loss.backward()
         # update generator weights
         g_optimizer.step()
@@ -203,13 +203,13 @@ for epoch in range(next_epoch, EPOCH):
     generate(SAMPLE, GENERATED_DIRPATH + f'gan_sample_{epoch + 1}.png')
 
     if (epoch + 1) % SAVE_INTERVAL == 0:
-        save_training_progress(net, g_optimizer, d_optimizer, epoch, MODEL_DIRPATH + f"gan-model-epoch{epoch + 1}.pth")
+        save_training_progress(G, D, g_optimizer, d_optimizer, epoch, MODEL_DIRPATH + f"gan-model-epoch{epoch + 1}.pth")
     
     print(f"""
-    Discriminator loss on real images: {d_real_loss/d_n}
-    Discriminator loss on fake images: {d_fake_loss/d_n}
-    Discriminator loss: {d_loss/d_n}
-    Generator loss: {g_loss/g_n}
+    Discriminator loss on real images: {d_real_loss/n}
+    Discriminator loss on fake images: {d_fake_loss/n}
+    Discriminator loss: {d_loss/n}
+    Generator loss: {g_loss/n}
     """, flush=True)
 
-save_training_progress(net, g_optimizer, d_optimizer, epoch, MODEL_DIRPATH + f"gan-model-epoch{EPOCH}.pth")
+save_training_progress(G, D, g_optimizer, d_optimizer, epoch, MODEL_DIRPATH + f"gan-model-epoch{EPOCH}.pth")
