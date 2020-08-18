@@ -50,12 +50,12 @@ Total data: {len(trainset) + len(testset)}
 # 2. instantiate the network model
 Z_DIM = 100
 # reference: https://machinelearningmastery.com/how-to-train-stable-generative-adversarial-networks/
-G = Generator(
+G = GAN.Generator(
     layers_dim=[Z_DIM, 256, 256, 784],
     internal_activation=nn.ReLU(),
     output_activation=nn.Tanh()
 )
-D = Discriminator(
+D = GAN.Discriminator(
     layers_dim=[784, 256, 256, 1],
     internal_activation=nn.LeakyReLU(0.2),
     output_activation=nn.Sigmoid()
@@ -63,6 +63,7 @@ D = Discriminator(
 print(f"""
 Generator G:
 {G}
+
 Discriminator D:
 {D}
 """, flush=True)
@@ -74,10 +75,12 @@ Discriminator D:
 multigpu = False
 if torch.cuda.device_count() > 1:
     print(f'Number of GPUs: {torch.cuda.device_count()}\n', flush=True)
-    net = nn.DataParallel(net)
+    G = nn.DataParallel(G)
+    D = nn.DataParallel(D)
     multigpu = True
 
-net.to(device)
+G.to(device)
+D.to(device)
 
 # 3. define the loss function
 # the discriminator will output a value in the range of [0, 1]
