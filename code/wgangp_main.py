@@ -189,8 +189,6 @@ for epoch in range(next_epoch, EPOCH):
     d_fake_wloss = 0.0
     d_loss = 0.0
     g_loss = 0.0
-    d_n = 0
-    g_n = 0
 
     D.train()
     G.train()
@@ -204,7 +202,6 @@ for epoch in range(next_epoch, EPOCH):
     counter = 0
     for train_data in tqdm(trainloader, desc=f"Epoch {epoch + 1}/{EPOCH}"):
         inputs = train_data[0].to(device)
-        d_n += len(inputs)
 
         # 1. train the discriminator
         # zeroes gradients
@@ -237,7 +234,6 @@ for epoch in range(next_epoch, EPOCH):
         d_optimizer.step()
 
         if counter % CRITIC_ITER == 0:
-            g_n += len(inputs)
             # 2. train the generator
             g_optimizer.zero_grad()
             d_optimizer.zero_grad()
@@ -261,10 +257,10 @@ for epoch in range(next_epoch, EPOCH):
         save_training_progress(G, D, g_optimizer, d_optimizer, epoch, MODEL_DIRPATH + f'wgangp-model-epoch{epoch + 1}.pth')
 
     print(f"""
-    Discriminator loss on real images: {d_real_wloss/d_n}
-    Discriminator loss on fake images: {d_fake_wloss/d_n}
-    Discriminator loss: {d_loss/d_n}
-    Generator loss: {g_loss/g_n}
+    Discriminator loss on real images: {d_real_wloss/len(trainloader)}
+    Discriminator loss on fake images: {d_fake_wloss/len(trainloader)}
+    Discriminator loss: {d_loss/len(trainloader)}
+    Generator loss: {g_loss/len(trainloader)}
     """, flush=True)
 
 save_training_progress(G, D, g_optimizer, d_optimizer, epoch, MODEL_DIRPATH + f'wgangp-model-epoch{epoch + 1}.pth')
