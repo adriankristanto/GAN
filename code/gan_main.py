@@ -148,7 +148,6 @@ for epoch in range(next_epoch, EPOCH):
     d_fake_loss = 0.0
     d_loss = 0.0
     g_loss = 0.0
-    n = 0
 
     D.train()
     G.train()
@@ -177,7 +176,6 @@ for epoch in range(next_epoch, EPOCH):
         # compute total loss
         total_loss = (real_loss + fake_loss)
         d_loss += total_loss.item()
-        n += len(inputs)
         # compute gradients
         total_loss.backward()
         # update discriminator weights
@@ -206,10 +204,10 @@ for epoch in range(next_epoch, EPOCH):
         save_training_progress(G, D, g_optimizer, d_optimizer, epoch, MODEL_DIRPATH + f"gan-model-epoch{epoch + 1}.pth")
     
     print(f"""
-    Discriminator loss on real images: {d_real_loss/n}
-    Discriminator loss on fake images: {d_fake_loss/n}
-    Discriminator loss: {d_loss/n}
-    Generator loss: {g_loss/n}
+    Discriminator loss on real images: {d_real_loss/len(trainloader)}
+    Discriminator loss on fake images: {d_fake_loss/len(trainloader)}
+    Discriminator loss: {d_loss/len(trainloader)}
+    Generator loss: {g_loss/len(trainloader)}
     """, flush=True)
 
 save_training_progress(G, D, g_optimizer, d_optimizer, epoch, MODEL_DIRPATH + f"gan-model-epoch{EPOCH}.pth")

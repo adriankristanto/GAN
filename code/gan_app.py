@@ -10,7 +10,7 @@ device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
 # load the model
 MODEL_PATH = os.path.dirname(os.path.realpath(__file__)) + '/../saved_models/'
-MODEL_NAME = 'gan-model-epoch300.pth'
+MODEL_NAME = 'gan-model-epoch100.pth'
 Z_DIM = 100
 
 G = GAN.Generator(
