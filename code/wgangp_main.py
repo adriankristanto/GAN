@@ -225,6 +225,9 @@ for epoch in range(next_epoch, EPOCH):
         d_fake_wloss += fake_loss.item()
 
         # compute total loss
+        # note that the real_loss can also be written as follows
+        # real_loss = -1 * real_outputs.mean()
+        # since real_labels = 1s, thus, real_outputs * 1s = real_outputs
         total_loss = real_loss + fake_loss + LAMBDA * GradientPenaltyLoss(D, inputs, fake_inputs, reduction='mean')
         d_loss += total_loss.item()
 
