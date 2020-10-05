@@ -242,6 +242,12 @@ for epoch in range(next_epoch, EPOCH):
             outputs = D(G(samples))
             labels = torch.ones((inputs.shape[0], 1, 1, 1)).to(device)
             # compute loss
+            # note that the loss for the generator can also be written as follows:
+            # loss = -1 * outputs.mean()
+            # which essentially means that the loss of the generator is the 
+            # negative of the average of the critic's prediction on generated images
+            # as the generator attempts to maximise the critic's prediction on the fake images
+            # also note that the labels are 1s, and outputs * 1s = outputs
             loss = WassersteinLoss(outputs, labels, reduction='mean')
             g_loss += loss.item()
             # compute gradients
