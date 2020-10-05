@@ -228,7 +228,8 @@ for epoch in range(next_epoch, EPOCH):
         # note that the real_loss can also be written as follows
         # real_loss = -1 * real_outputs.mean()
         # since real_labels = 1s, thus, real_outputs * 1s = real_outputs
-        
+        # which will be negative because of -1 in WassersteinLoss
+
         # also, the fake_loss can also be written as follows
         # fake_loss = fake_outputs.mean()
         # note that fake_labels = -1s (see the -1 in front), thus, -1 * fake_outputs = -fake_outputs, which negates
