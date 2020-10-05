@@ -228,6 +228,10 @@ for epoch in range(next_epoch, EPOCH):
         # note that the real_loss can also be written as follows
         # real_loss = -1 * real_outputs.mean()
         # since real_labels = 1s, thus, real_outputs * 1s = real_outputs
+        # also, the fake_loss can also be written as follows
+        # fake_loss = fake_outputs.mean()
+        # note that fake_labels = -1s (see the -1 in front), thus, -1 * fake_outputs = -fake_outputs, which negates
+        # the -1 in WassersteinLoss
         total_loss = real_loss + fake_loss + LAMBDA * GradientPenaltyLoss(D, inputs, fake_inputs, reduction='mean')
         d_loss += total_loss.item()
 
