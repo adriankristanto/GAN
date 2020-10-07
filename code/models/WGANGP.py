@@ -46,6 +46,7 @@ class Generator(nn.Module):
 class Critic(nn.Module):
 
     # note that we don't use batchnorm in the critic
+    # because gradient penalty should be independently imposed on different samples, but batch normalization brings batch correlation
     def __init__(self, channels, kernels, strides, paddings, internal_activation):
         super(Critic, self).__init__()
         self.layers = self._build(channels, kernels, strides, paddings, internal_activation)
